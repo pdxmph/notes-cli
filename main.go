@@ -529,9 +529,6 @@ func main() {
 		main()
 		return
 		
-	case "test-parse":
-		testParseTasks()
-		
 	// More backward compatibility aliases
 	case "new":
 		// Redirect to note new
