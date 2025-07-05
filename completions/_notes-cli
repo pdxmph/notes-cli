@@ -1,0 +1,231 @@
+#compdef notes-cli
+
+# Zsh completion for notes-cli
+
+_notes-cli() {
+    local -a commands
+    local -a task_commands
+    local -a project_commands
+    local -a note_commands
+    
+    commands=(
+        'task:Manage tasks'
+        'project:Manage projects'
+        'note:Manage notes'
+    )
+    
+    task_commands=(
+        'new:Create a new task'
+        'list:List tasks'
+        'done:Mark task(s) as done'
+        'update:Update task(s)'
+    )
+    
+    project_commands=(
+        'new:Create a new project'
+        'list:List projects'
+        'tasks:List tasks for a project'
+    )
+    
+    note_commands=(
+        'new:Create a new note'
+        'list:List notes'
+        'edit:Edit a note'
+        'rename:Rename a note'
+    )
+    
+    case $words[2] in
+        task)
+            if (( CURRENT == 3 )); then
+                _describe -t task-commands 'task command' task_commands
+            else
+                case $words[3] in
+                    new)
+                        _arguments \
+                            '-title[Task title]:title:' \
+                            '-p[Priority (p1, p2, p3)]:priority:(p1 p2 p3)' \
+                            '-due[Due date]:date:' \
+                            '-start[Start date]:date:' \
+                            '-estimate[Estimate (1,2,3,5,8,13)]:estimate:(1 2 3 5 8 13)' \
+                            '-project[Project name]:project:_notes_cli_projects' \
+                            '-area[Area]:area:(work personal home)' \
+                            '-assign[Assignee]:assignee:' \
+                            '-tags[Additional tags]:tags:' \
+                            '-no-edit[Skip opening editor]'
+                        ;;
+                    list)
+                        _arguments \
+                            '-status[Filter by status]:status:(open done paused delegated dropped)' \
+                            '-p[Filter by priority]:priority:(p1 p2 p3)' \
+                            '-p1[Show only P1 tasks]' \
+                            '-p2[Show only P2 tasks]' \
+                            '-p3[Show only P3 tasks]' \
+                            '-project[Filter by project]:project:_notes_cli_projects' \
+                            '-area[Filter by area]:area:(work personal home)' \
+                            '-tag[Filter by tag]:tag:' \
+                            '-due[Filter by due date]:due:(today week month)' \
+                            '-overdue[Show only overdue tasks]' \
+                            '-all[Show all tasks]' \
+                            '-sort[Sort by]:sort:(modified priority due created start estimate)' \
+                            '-reverse[Reverse sort order]' \
+                            '-soon[Show tasks due soon]:days:'
+                        ;;
+                    done|update)
+                        if (( CURRENT == 4 )); then
+                            _notes_cli_tasks
+                        else
+                            case $words[3] in
+                                update)
+                                    _arguments \
+                                        '-status[New status]:status:(open done paused delegated dropped)' \
+                                        '-p[New priority]:priority:(p1 p2 p3)' \
+                                        '-due[New due date]:date:' \
+                                        '-start[New start date]:date:' \
+                                        '-estimate[New estimate]:estimate:(1 2 3 5 8 13)' \
+                                        '-project[New project]:project:_notes_cli_projects' \
+                                        '-area[New area]:area:(work personal home)' \
+                                        '-assign[New assignee]:assignee:'
+                                    ;;
+                            esac
+                        fi
+                        ;;
+                esac
+            fi
+            ;;
+        project)
+            if (( CURRENT == 3 )); then
+                _describe -t project-commands 'project command' project_commands
+            else
+                case $words[3] in
+                    new)
+                        _arguments \
+                            '-title[Project title]:title:' \
+                            '-status[Project status]:status:(active completed paused cancelled)' \
+                            '-due[Due date]:date:' \
+                            '-start[Start date]:date:' \
+                            '-tags[Additional tags]:tags:' \
+                            '-no-edit[Skip opening editor]'
+                        ;;
+                    list)
+                        _arguments \
+                            '-status[Filter by status]:status:(active completed paused cancelled)' \
+                            '-all[Show all projects]' \
+                            '-soon[Show projects due soon]:days:'
+                        ;;
+                    tasks)
+                        if (( CURRENT == 4 )); then
+                            _notes_cli_projects
+                        else
+                            _arguments \
+                                '-sort[Sort by]:sort:(modified priority due created start estimate)' \
+                                '-reverse[Reverse sort order]'
+                        fi
+                        ;;
+                esac
+            fi
+            ;;
+        note)
+            if (( CURRENT == 3 )); then
+                _describe -t note-commands 'note command' note_commands
+            else
+                case $words[3] in
+                    new)
+                        _arguments \
+                            '-title[Note title]:title:' \
+                            '-tags[Tags]:tags:' \
+                            '-no-edit[Skip opening editor]'
+                        ;;
+                    list)
+                        _arguments \
+                            '-tag[Filter by tag]:tag:'
+                        ;;
+                    edit|rename)
+                        if (( CURRENT == 4 )); then
+                            _notes_cli_notes
+                        fi
+                        ;;
+                esac
+            fi
+            ;;
+        *)
+            if (( CURRENT == 2 )); then
+                _describe -t commands 'notes-cli command' commands
+                # Also support old-style commands for backward compatibility
+                _alternative \
+                    'commands:command:((
+                        tasks:List\ tasks
+                        done:Mark\ task\ as\ done
+                        task-update:Update\ task
+                        projects:List\ projects
+                        project-tasks:List\ project\ tasks
+                        new:Create\ new\ note
+                        ls:List\ notes
+                        list:List\ notes
+                        edit:Edit\ note
+                        rename:Rename\ note
+                    ))'
+            fi
+            ;;
+    esac
+}
+
+# Helper function to complete task IDs
+_notes_cli_tasks() {
+    local tasks
+    tasks=()
+    # Get task list and extract IDs
+    while IFS= read -r line; do
+        if [[ $line =~ ^[[:space:]]*([0-9]+)\. ]]; then
+            tasks+=("${BASH_REMATCH[1]}")
+        fi
+    done < <(notes-cli task list -all 2>/dev/null)
+    
+    if (( ${#tasks[@]} > 0 )); then
+        _values 'task' $tasks
+    else
+        _message 'no tasks found'
+    fi
+}
+
+# Helper function to complete project names
+_notes_cli_projects() {
+    local projects
+    projects=()
+    # Get project list and extract names
+    while IFS= read -r line; do
+        if [[ $line =~ ^[[:space:]]*[0-9]+\.[[:space:]]*[^[:space:]]+[[:space:]]+(.+)$ ]]; then
+            project="${BASH_REMATCH[1]}"
+            # Remove due date info if present
+            project="${project%% (*}"
+            if [[ -n "$project" ]]; then
+                projects+=("$project")
+            fi
+        fi
+    done < <(notes-cli project list -all 2>/dev/null)
+    
+    if (( ${#projects[@]} > 0 )); then
+        _values 'project' $projects
+    else
+        _message 'no projects found'
+    fi
+}
+
+# Helper function to complete note IDs
+_notes_cli_notes() {
+    local notes
+    notes=()
+    # Get note list and extract IDs
+    while IFS= read -r line; do
+        if [[ $line =~ ^[[:space:]]*([0-9]+)\. ]]; then
+            notes+=("${BASH_REMATCH[1]}")
+        fi
+    done < <(notes-cli note list 2>/dev/null)
+    
+    if (( ${#notes[@]} > 0 )); then
+        _values 'note' $notes
+    else
+        _message 'no notes found'
+    fi
+}
+
+_notes-cli "$@"

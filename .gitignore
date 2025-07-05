@@ -1,0 +1,36 @@
+# Binaries
+notes-cli
+tw-import
+
+# Go build cache
+*.test
+*.out
+
+# Generated files
+.notes-cli-index.json
+
+# Development files
+debug-*
+test-*
+fix-*
+migrate-*
+sanitize-*
+full-sanitize-*
+tw-export.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Testing
+test_notes/
