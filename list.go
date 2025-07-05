@@ -152,7 +152,7 @@ func saveIndexCache(config Config, notes []NoteInfo) error {
 		Created: time.Now(),
 	}
 	
-	cacheFile := filepath.Join(config.NotesDir, ".notes-cli-index.json")
+	cacheFile := filepath.Join(config.TaskDir, ".notes-cli-index.json")
 	data, err := json.MarshalIndent(cache, "", "  ")
 	if err != nil {
 		return err
@@ -162,7 +162,7 @@ func saveIndexCache(config Config, notes []NoteInfo) error {
 }
 
 func loadIndexCache(config Config) (*IndexCache, error) {
-	cacheFile := filepath.Join(config.NotesDir, ".notes-cli-index.json")
+	cacheFile := filepath.Join(config.TaskDir, ".notes-cli-index.json")
 	data, err := ioutil.ReadFile(cacheFile)
 	if err != nil {
 		return nil, err

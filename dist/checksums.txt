@@ -1,0 +1,4 @@
+102844b98ddcf049adfca0f1e53e8a2dcdfec1eb5a0a94103dfc288d9f0d095d  notes-cli_v0.1.1_darwin_amd64.tar.gz
+9364c53c0eb023dcc404a5f04fbbf0fa74b02790c76e2b732f7e83c8569b8863  notes-cli_v0.1.1_darwin_arm64.tar.gz
+3205c63525a1a65811885eb8ad8ef8e4ecc932eaacc322059f4d003de982c7e5  notes-cli_v0.1.1_linux_amd64.tar.gz
+dc46aea96532542ddf049e293883941052caf8a76fe6e3b131976b8e9ce70f80  notes-cli_v0.1.1_linux_arm64.tar.gz

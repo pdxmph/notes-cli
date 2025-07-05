@@ -12,6 +12,7 @@ type IDCounter struct {
 	NextTaskID    int `json:"next_task_id"`
 	NextProjectID int `json:"next_project_id"`
 	mu            sync.Mutex
+	config        Config
 }
 
 var (
@@ -28,13 +29,8 @@ func getIDCounter(config Config) (*IDCounter, error) {
 }
 
 func loadIDCounter(config Config) (*IDCounter, error) {
-	// Use config dir for counter file
-	configDir := filepath.Join(os.Getenv("HOME"), ".config", "notes-cli")
-	if err := os.MkdirAll(configDir, 0755); err != nil {
-		return nil, fmt.Errorf("failed to create config dir: %w", err)
-	}
-	
-	counterFile := filepath.Join(configDir, "id-counter.json")
+	// Use task dir for counter file so it syncs with tasks
+	counterFile := filepath.Join(config.TaskDir, ".notes-cli-id-counter.json")
 	
 	// Try to load existing counter
 	data, err := os.ReadFile(counterFile)
@@ -48,6 +44,7 @@ func loadIDCounter(config Config) (*IDCounter, error) {
 			return &IDCounter{
 				NextTaskID:    maxTaskID + 1,
 				NextProjectID: maxProjectID + 1,
+				config:        config,
 			}, nil
 		}
 		return nil, fmt.Errorf("failed to read counter file: %w", err)
@@ -58,14 +55,14 @@ func loadIDCounter(config Config) (*IDCounter, error) {
 		return nil, fmt.Errorf("failed to parse counter file: %w", err)
 	}
 	
+	counter.config = config
 	return &counter, nil
 }
 
-func (c *IDCounter) save() error {
+func (c *IDCounter) save(config Config) error {
 	// Don't lock here - caller already has the lock
 	
-	configDir := filepath.Join(os.Getenv("HOME"), ".config", "notes-cli")
-	counterFile := filepath.Join(configDir, "id-counter.json")
+	counterFile := filepath.Join(config.TaskDir, ".notes-cli-id-counter.json")
 	
 	data, err := json.MarshalIndent(c, "", "  ")
 	if err != nil {
@@ -86,7 +83,7 @@ func (c *IDCounter) NextTask() (int, error) {
 	id := c.NextTaskID
 	c.NextTaskID++
 	
-	if err := c.save(); err != nil {
+	if err := c.save(c.config); err != nil {
 		return 0, err
 	}
 	
@@ -100,7 +97,7 @@ func (c *IDCounter) NextProject() (int, error) {
 	id := c.NextProjectID
 	c.NextProjectID++
 	
-	if err := c.save(); err != nil {
+	if err := c.save(c.config); err != nil {
 		return 0, err
 	}
 	

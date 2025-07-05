@@ -8,6 +8,7 @@ tw-import
 
 # Generated files
 .notes-cli-index.json
+.notes-cli-id-counter.json
 
 # Development files
 debug-*
