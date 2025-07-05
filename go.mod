@@ -1,4 +1,4 @@
-module github.com/mph/notes-cli
+module github.com/pdxmph/notes-cli
 
 go 1.21
 
