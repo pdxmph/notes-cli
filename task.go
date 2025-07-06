@@ -227,8 +227,9 @@ func parseDate(dateStr string) (string, error) {
 			// Parse relative durations like "3d", "2w", "1m"
 			targetDate = now.Add(duration)
 		} else {
-			// Try parsing as absolute date
-			parsed, err := time.Parse("2006-01-02", dateStr)
+			// Try parsing as absolute date in local timezone
+			loc := time.Now().Location()
+			parsed, err := time.ParseInLocation("2006-01-02", dateStr, loc)
 			if err != nil {
 				return "", fmt.Errorf("invalid date format: %s (use YYYY-MM-DD, day name, or relative like '3d', '2w', '1m')", dateStr)
 			}
