@@ -185,13 +185,19 @@ func isOverdue(dueDate string) bool {
 		return false
 	}
 	
-	due, err := time.Parse("2006-01-02", dueDate)
+	// Parse date in local timezone to avoid timezone issues
+	loc := time.Now().Location()
+	due, err := time.ParseInLocation("2006-01-02", dueDate, loc)
 	if err != nil {
 		return false
 	}
 	
-	now := time.Now().Truncate(24 * time.Hour)
-	return due.Before(now)
+	// Get current time at start of day in local timezone
+	now := time.Now().In(loc)
+	nowStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	dueStart := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, loc)
+	
+	return dueStart.Before(nowStart)
 }
 
 func isDueSoon(dueDate string, days int) bool {
@@ -199,16 +205,21 @@ func isDueSoon(dueDate string, days int) bool {
 		return false
 	}
 	
-	due, err := time.Parse("2006-01-02", dueDate)
+	// Parse date in local timezone to avoid timezone issues
+	loc := time.Now().Location()
+	due, err := time.ParseInLocation("2006-01-02", dueDate, loc)
 	if err != nil {
 		return false
 	}
 	
-	now := time.Now().Truncate(24 * time.Hour)
-	horizon := now.AddDate(0, 0, days)
+	// Get current time at start of day in local timezone
+	now := time.Now().In(loc)
+	nowStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	dueStart := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, loc)
+	horizonStart := nowStart.AddDate(0, 0, days)
 	
 	// Due date should be between now and the horizon (inclusive)
-	return !due.Before(now) && !due.After(horizon)
+	return !dueStart.Before(nowStart) && !dueStart.After(horizonStart)
 }
 
 func hasTag(tags []string, tag string) bool {

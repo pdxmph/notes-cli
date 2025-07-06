@@ -246,13 +246,19 @@ func formatProjectDueDate(dueDate string) string {
 		return ""
 	}
 	
-	due, err := time.Parse("2006-01-02", dueDate)
+	// Parse date in local timezone to avoid timezone issues
+	loc := time.Now().Location()
+	due, err := time.ParseInLocation("2006-01-02", dueDate, loc)
 	if err != nil {
 		return ""
 	}
 	
-	now := time.Now().Truncate(24 * time.Hour)
-	days := int(due.Sub(now).Hours() / 24)
+	// Get current time at start of day in local timezone
+	now := time.Now().In(loc)
+	nowStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, loc)
+	dueStart := time.Date(due.Year(), due.Month(), due.Day(), 0, 0, 0, 0, loc)
+	
+	days := int(dueStart.Sub(nowStart).Hours() / 24)
 	
 	if days < 0 {
 		return fmt.Sprintf(" (overdue %d days)", -days)
@@ -346,7 +352,9 @@ func sortProjects(projects []ProjectInfo, sortBy string, reverse bool) {
 				if dateStr == "" {
 					return time.Time{} // Zero time for empty dates
 				}
-				if date, err := time.Parse("2006-01-02", dateStr); err == nil {
+				// Parse date in local timezone to avoid timezone issues
+				loc := time.Now().Location()
+				if date, err := time.ParseInLocation("2006-01-02", dateStr, loc); err == nil {
 					return date
 				}
 				return time.Time{}
